@@ -1,0 +1,22 @@
+sudo: required
+services:
+   - docker
+
+before_install: 
+  - docker build -t ayomide/react-test -f ./client/Dockerfile.dev ./client/Dockerfile.dev
+
+script: 
+  - docker run ayomide/react-test npm test -- --coverage
+
+after_success: 
+   - docker build -t ayomide/multi-client ./client
+   - docker build -t ayomide/multi-nginx ./nginx
+   - docker build -t ayomide/multi-server ./server 
+   - docker build -t ayomide/multi-worker ./worker
+   # Log in to docker CLI
+   - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+   # Take those images and push themm to docker hub
+   - docker push ayomide/multi-client
+   - docker push ayomide/multi-nginx
+   - docker push ayomide/multi-server
+   - docker push ayomide/multi-worker
